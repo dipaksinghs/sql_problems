@@ -1,0 +1,35 @@
+--Link to the question : https://platform.stratascratch.com/coding/2012-viewers-turned-streamers?code_type=1&utm_source=youtube&utm_medium=click&utm_campaign=YT+description+link
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Question:
+
+--From users who had their first session as a viewer, how many streamer sessions have they had? Return the user id and number of sessions in descending order.
+--In case there are users with the same number of sessions, order them by ascending user id
+
+--Schema:
+
+user_id:int
+session_start:datetime
+session_end:datetime
+session_id:int
+session_type:varchar
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Solution:
+
+
+with session_rank as
+(
+select 
+*,
+rank() over (partition by user_id order by session_start,session_end) as rank
+from twitch_sessions
+),
+first_session_viewer as
+(
+select * from session_rank where rank=1 and session_type='viewer'
+)
+select first_session_viewer.user_id,count(session_rank.session_id)
+from first_session_viewer
+left join session_rank on first_session_viewer.user_id=session_rank.user_id
+where session_rank.rank!=1
+group by first_session_viewer.user_id
+;
